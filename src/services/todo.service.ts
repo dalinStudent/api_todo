@@ -9,11 +9,11 @@ export class TodoService {
 
   async getAllTodos() {
     const todos = [];
-    const snapshot = await this._firebaseAdmin
+    const todoQuery = await this._firebaseAdmin
       .firestore()
       .collection('todos')
       .get();
-    snapshot.forEach((doc) => {
+    todoQuery.forEach((doc) => {
       todos.push({ id: doc.id, ...doc.data() });
     });
     return todos;
@@ -29,29 +29,33 @@ export class TodoService {
   }
 
   async createTodo(todo: any) {
-    const todoCreate = await this._firebaseAdmin
-      .firestore()
-      .collection('todos')
-      .where('todo', '==', todo)
-      .get();
-    if (!todoCreate.empty) {
-      throw new Error('Todo already exists');
-    }
-
     const now = new Date();
     const formattedTime = now.toLocaleDateString('en-US', {
       month: '2-digit',
       day: '2-digit',
       year: 'numeric',
     });
-    const todoWithTime = { ...todo, createdDt: formattedTime };
+    const data = { ...todo, createdDt: formattedTime };
+
+    const createTodo = await this._firebaseAdmin
+      .firestore()
+      .collection('todos')
+      .where('todo', '==', data.todo)
+      .get();
+
+    if (!createTodo.empty) {
+      return {
+        message: 'error',
+        data: 'A todo with the same name already exists.',
+      };
+    }
 
     const ref = await this._firebaseAdmin
       .firestore()
       .collection('todos')
-      .add(todoWithTime);
+      .add(data);
 
-    const createdTodo = { id: ref.id, ...todoWithTime };
+    const createdTodo = { id: ref.id, ...data };
     return { message: 'success', data: createdTodo };
   }
 
