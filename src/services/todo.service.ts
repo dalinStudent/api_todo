@@ -29,12 +29,12 @@ export class TodoService {
   }
 
   async createTodo(todo: any) {
-    const querySnapshot = await this._firebaseAdmin
+    const todoCreate = await this._firebaseAdmin
       .firestore()
       .collection('todos')
       .where('todo', '==', todo)
       .get();
-    if (!querySnapshot.empty) {
+    if (!todoCreate.empty) {
       throw new Error('Todo already exists');
     }
 
@@ -58,12 +58,12 @@ export class TodoService {
   async updateTodoById(id: string, todo: any) {
     const { todo: updatedTodo } = todo;
 
-    const querySnapshot = await this._firebaseAdmin
+    const todoUpdate = await this._firebaseAdmin
       .firestore()
       .collection('todos')
       .where('todo', '==', updatedTodo)
       .get();
-    const docs = querySnapshot.docs.filter((doc) => doc.id !== id);
+    const docs = todoUpdate.docs.filter((doc) => doc.id !== id);
     if (docs.length > 0) {
       throw new Error('Todo already exists');
     }
@@ -81,8 +81,8 @@ export class TodoService {
       .collection('todos')
       .doc(id)
       .update(todoWithTime);
-
-    return { id, ...todoWithTime };
+    const updated = { id, ...todoWithTime };
+    return { message: 'success', data: updated };
   }
 
   async deleteTodoById(id: string) {
