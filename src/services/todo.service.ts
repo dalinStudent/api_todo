@@ -29,20 +29,60 @@ export class TodoService {
   }
 
   async createTodo(todo: any) {
+    const querySnapshot = await this._firebaseAdmin
+      .firestore()
+      .collection('todos')
+      .where('todo', '==', todo)
+      .get();
+    if (!querySnapshot.empty) {
+      throw new Error('Todo already exists');
+    }
+
+    const now = new Date();
+    const formattedTime = now.toLocaleDateString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric',
+    });
+    const todoWithTime = { ...todo, createdDt: formattedTime };
+
     const ref = await this._firebaseAdmin
       .firestore()
       .collection('todos')
-      .add(todo);
-    return { id: ref.id, ...todo };
+      .add(todoWithTime);
+
+    const createdTodo = { id: ref.id, ...todoWithTime };
+    return { message: 'success', data: createdTodo };
   }
 
   async updateTodoById(id: string, todo: any) {
+    const { todo: updatedTodo } = todo;
+
+    const querySnapshot = await this._firebaseAdmin
+      .firestore()
+      .collection('todos')
+      .where('todo', '==', updatedTodo)
+      .get();
+    const docs = querySnapshot.docs.filter((doc) => doc.id !== id);
+    if (docs.length > 0) {
+      throw new Error('Todo already exists');
+    }
+
+    const now = new Date();
+    const formattedTime = now.toLocaleDateString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric',
+    });
+    const todoWithTime = { ...todo, createdDt: formattedTime };
+
     await this._firebaseAdmin
       .firestore()
       .collection('todos')
       .doc(id)
-      .update(todo);
-    return { id, ...todo };
+      .update(todoWithTime);
+
+    return { id, ...todoWithTime };
   }
 
   async deleteTodoById(id: string) {

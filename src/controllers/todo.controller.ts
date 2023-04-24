@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { TodoService } from '../services/todo.service';
 
-@Controller('todo')
+@Controller('api/todo')
 export class TodoController {
   constructor(private readonly todoService: TodoService) {}
 
