@@ -1,5 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import * as admin from 'firebase-admin';
+import { Todo } from 'src/models/todo.model';
 
 @Injectable()
 export class TodoService {
@@ -46,7 +47,7 @@ export class TodoService {
     if (!createTodo.empty) {
       return {
         message: 'error',
-        data: 'A todo with the same name already exists.',
+        data: 'This todo already exists.',
       };
     }
 
@@ -59,8 +60,16 @@ export class TodoService {
     return { message: 'success', data: createdTodo };
   }
 
-  async updateTodoById(id: string, todo: any) {
+  async updateTodoById(id: string, todo: Todo) {
     const { todo: updatedTodo } = todo;
+
+    const now = new Date();
+    const formattedTime = now.toLocaleDateString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric',
+    });
+    const data = { ...todo, createdDt: formattedTime };
 
     const todoUpdate = await this._firebaseAdmin
       .firestore()
@@ -71,21 +80,12 @@ export class TodoService {
     if (docs.length > 0) {
       throw new Error('Todo already exists');
     }
-
-    const now = new Date();
-    const formattedTime = now.toLocaleDateString('en-US', {
-      month: '2-digit',
-      day: '2-digit',
-      year: 'numeric',
-    });
-    const todoWithTime = { ...todo, createdDt: formattedTime };
-
     await this._firebaseAdmin
       .firestore()
       .collection('todos')
       .doc(id)
-      .update(todoWithTime);
-    const updated = { id, ...todoWithTime };
+      .update(data);
+    const updated = { id, ...data };
     return { message: 'success', data: updated };
   }
 
