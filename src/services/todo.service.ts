@@ -42,6 +42,7 @@ export class TodoService {
       .firestore()
       .collection('todos')
       .where('todo', '==', data.todo)
+      .limit(1)
       .get();
 
     if (!createTodo.empty) {
@@ -78,7 +79,10 @@ export class TodoService {
       .get();
     const docs = todoUpdate.docs.filter((doc) => doc.id !== id);
     if (docs.length > 0) {
-      throw new Error('Todo already exists');
+      return {
+        message: 'error',
+        data: 'This todo already exists.',
+      };
     }
     await this._firebaseAdmin
       .firestore()
